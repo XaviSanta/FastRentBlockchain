@@ -32,8 +32,8 @@ contract FRBToken {
 }
 
 /* 
-    This contract is created whenever an owner of property wants to computeNumDays
-    the house available to rent. 
+    This contract is created whenever an owner of property wants to
+    put the house available to rent. 
 */ 
 contract Rent {
     FRBToken tokenContract; // TODO: is this correct?
