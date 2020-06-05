@@ -21,5 +21,5 @@
 	- f.RentHouse: -*5 nights example*-
 		- startTime:	`1592662031`
 		- endTime:		`1593094031`
-6. Check OWNER balance `+100 FRB` -> Corrrect
+6. Check OWNER balance `+100 FRB` -> Correct
 7. Check RENTER balance `-100 FRB` ->  Correct
