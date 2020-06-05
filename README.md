@@ -12,9 +12,10 @@
 
 4. OWNER: `0x583031D1113aD414F02576BD6afaBfb302140225`
 	- Creates **Rent** Contract 
-		- _pricePerNight: `20`
-		- _cleanTime: `20`
-		- _contractAddress: `0xD66bA2586845B4c297a3CB34ec5d566321780513`
+  		- _pricePerNight: `20`
+    	- _minimumDaysStay: `4`
+  		- _cleanTime: `20`
+  		- _contractAddress: `0xD66bA2586845B4c297a3CB34ec5d566321780513`
 
 5. RENTER:
 	- f.computePrice, f.computeNumDays, f.isAvailable -> Correct
