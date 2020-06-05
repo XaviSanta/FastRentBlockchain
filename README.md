@@ -1,11 +1,10 @@
 # FastRentBlock
 
 ## Example to test it: 
-1. create contract FRBToken with
-   - `0xff1e56Fa5fC65C38683c3c3801fD0574393CAeB6`
+1. Create contract **FRBToken**
 
-2. **Contract** address is
-   - `0xD66bA2586845B4c297a3CB34ec5d566321780513`
+2. Create contract **UserReputations**
+   - Constructor(<`FRBToken contract address`>) from last step
 
 3. RENTER: `0xdD870fA1b7C4700F2BD7f44238821C26f7392148`
 	- **Buys** `200 FRB` tokens with `2.000.000 weis`
@@ -15,7 +14,8 @@
   		- _pricePerNight: `20`
     	- _minimumDaysStay: `4`
   		- _cleanTime: `20`
-  		- _contractAddress: `0xD66bA2586845B4c297a3CB34ec5d566321780513`
+  		- _contractAddress: <`FRBToken contract address`>
+  		- _reputationsContract: <`UserReputations contract address`>
 
 5. RENTER:
 	- f.computePrice, f.computeNumDays, f.isAvailable -> Correct
@@ -24,3 +24,6 @@
 		- endTime:		`1593094031`
 6. Check OWNER balance `+100 FRB` -> Correct
 7. Check RENTER balance `-100 FRB` ->  Correct
+8. User can now valorate the stay calling f.**evaluateOwner**
+	- Parameter is a number from 1 to 5
+9. In UserReputation call `getReputation(owner addr)` and it should have changed
