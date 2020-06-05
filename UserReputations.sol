@@ -21,17 +21,16 @@ contract UserReputations {
     
     // from 1 to 5
     function evaluateUser(address _user, uint _valoration) public returns (bool) {
-        if (1 <= _valoration && _valoration <= 5) {
-            // Checks if the addres is from a Rent Contract and renter have rented the house
-            // msg.sender is the address of the rent contract and tx origin is the renter who called 
-            // the evaluate function in Rent Contract
-            if(Rent(msg.sender).canThisUserValorateOwner(tx.origin)) {
-                uint numVotes = reputations[_user].numVotes;
-                uint averageScore = reputations[_user].averageScore;
-                uint newScore = averageScore * (numVotes/(numVotes+1)) + (_valoration/(numVotes+1));
-                reputations[_user] = Reputation(newScore, numVotes+1); // Update reputation of user
-                return true;
-            }
+        require(1 <= _valoration && _valoration <= 5, 'Value should be between 1 and 5');
+        // Checks if the addres is from a Rent Contract and renter have rented the house
+        // msg.sender is the address of the rent contract and tx origin is the renter who called
+        // the evaluate function in Rent Contract
+        if(Rent(msg.sender).canThisUserValorateOwner(tx.origin)) {
+            uint numVotes = reputations[_user].numVotes;
+            uint averageScore = reputations[_user].averageScore;
+            uint newScore = averageScore * (numVotes/(numVotes+1)) + (_valoration/(numVotes+1));
+            reputations[_user] = Reputation(newScore, numVotes+1); // Update reputation of user
+            return true;
         }
         return false;
     }

@@ -60,17 +60,19 @@ contract Rent {
             uint secondsBetweenStays = hoursBetweenStays * 1 hours;
             bool isFree = _endTime+secondsBetweenStays < clients[i].startTime
                 || clients[i].endTime+secondsBetweenStays < _startTime;
-            if(!isFree) {
-                return false;
-            }
+            require(isFree, 'Given days are not free');
         }
 
         // check if dates are future times and it has at least a minimum stay 
-        return (_startTime > now) && (_startTime+(minimumDaysStay*1 days) < _endTime);
+        require(_startTime > now, 'Start time should be a future time');
+        require(_startTime < _endTime, 'Start time should be before end time');
+        require(_endTime - _startTime >= minimumDaysStay*1 days, 'Minimum days stay requirement failed');
+        return true;
     }
 
     function haveEnoughFunds(uint _price) internal view  returns (bool) {
-        return tokenContract.getBalance(msg.sender) > _price;
+        require(tokenContract.getBalance(msg.sender) > _price, 'You dont have enough tokens, buy some.');
+        return true;
     }
 
     function evaluateOwner(uint _valoration) public returns (bool) {
