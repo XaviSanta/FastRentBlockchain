@@ -1,13 +1,13 @@
 pragma solidity 0.6.8;
 /*
-    Fast Rent Blockchain Token
-    This utility token is used to pay rents and be able the evaluate stays
+    Fast Rent Blockchain Utility Token
+    This token is used to pay rents and be able the evaluate stays
 */
 contract FRBToken {
     string public name;
     string public symbol;
     address payable FRBTeam;
-    mapping(address => uint) public balances;
+    mapping(address => uint) balances;
     
     constructor(string memory _name, string memory _symbol) public {
         name = _name;
@@ -18,7 +18,7 @@ contract FRBToken {
     function buyTokens() public payable {
         uint nWeis = msg.value;
         FRBTeam.transfer(nWeis);
-        balances[tx.origin] += nWeis / 1000; // TODO: Price per token to be decided
+        balances[msg.sender] += nWeis / 1000;
     }
 
     function TransferTokens(address _source, address _target, uint _numTokens) public {
@@ -28,8 +28,8 @@ contract FRBToken {
         balances[_target] += _numTokens;
     }
 
-    function getMyBalance() public view returns (uint) {
-        return balances[tx.origin];
+    function getBalance(address _wallet) public view returns (uint) {
+        return balances[_wallet];
     }
 }
 
@@ -38,8 +38,8 @@ contract UserReputations {
     
     mapping(address => Reputation) reputations;
     struct Reputation {
-        uint averageScore;
-        uint numVotes;
+        uint averageScore;  // Score from 1 to 5
+        uint numVotes;      // Number of people who rated the user
     }
     
     constructor(address _tokenContract) public {
@@ -136,7 +136,7 @@ contract Rent {
     }
 
     function haveEnoughFunds(uint _price) internal view  returns (bool) {
-        return tokenContract.getMyBalance() > _price;
+        return tokenContract.getBalance(msg.sender) > _price;
     }
 
     function evaluateOwner(uint _valoration) public returns (bool) {
