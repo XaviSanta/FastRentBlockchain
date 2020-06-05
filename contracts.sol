@@ -3,24 +3,22 @@ pragma solidity 0.6.8;
     Fast Rent Blockchain Token
     This utility token is used to pay rents and be able the evaluate stays
 */
-// TODO buy token, transfer etc..
 contract FRBToken {
     string public name;
     string public symbol;
+    address payable FRBTeam;
     mapping(address => uint256) public balances;
     
     constructor(string memory _name, string memory _symbol) public {
         name = _name;
         symbol = _symbol;
+        FRBTeam = msg.sender;
     }
     
-    function mint() public virtual {
-        balances[tx.origin]++;  
-    }
-    
-    // TODO: Buy Tokens
-    function buyTokens() public {
-        
+    function buyTokens() public payable {
+        uint256 nWeis = msg.value;
+        FRBTeam.transfer(nWeis);
+        balances[tx.origin] += nWeis / 1000; // TODO: Price per token to be decided
     }
     
     function TransferTokens(address source, address target, uint num_tokens) public {
@@ -29,19 +27,21 @@ contract FRBToken {
         balances[source] -= num_tokens;
         balances[target] += num_tokens;
     }
+    
+    function getBalance() public view returns (uint256) {
+        return balances[tx.origin];
+    }
 }
 
 /* 
-    This contract is created whenever an owner of property wants to computeNumDays
-    the house available to rent. 
+    This contract is created whenever an owner of property wants to
+    put the house available to rent. 
 */ 
 contract Rent {
-    FRBToken tokenContract; // TODO: is this correct?
-    
+    FRBToken tokenContract;
     uint256 pricePerNight; // in FRB Tokens
-    address public token; // Public address of FRB token wallet
     address payable owner_wallet; // Owner Wallet
-    uint256 cleanTime;
+    uint256 cleanTime; // Time between clients to clean the property
     
     Client[] clients;
     struct Client {
@@ -50,13 +50,11 @@ contract Rent {
         uint256 endTime;
     }
    
-    constructor(address payable _wallet, uint256 _pricePerNight, uint _cleanTime, address _token) public {
-        owner_wallet = _wallet;
+    constructor(uint256 _pricePerNight, uint _cleanTime, address _tokenContract) public {
+        owner_wallet = msg.sender;
         pricePerNight = _pricePerNight;
         cleanTime = _cleanTime;
-        // Public address of FRB Wallet
-        // TODO: hardcode it maybe?
-        token = _token; 
+        tokenContract = FRBToken(_tokenContract); // Contract Address of the FRB Tokne contract, not the wallet
     }
     
     function deleteContract() public onlyOwner {
@@ -67,8 +65,7 @@ contract Rent {
     function RentHouse(uint256 startTime, uint256 endTime) public payable returns (bool) {
         uint256 nDays = computeNumDays(startTime, endTime);
         uint256 price = computePrice(nDays); // price in FRB Tokens
-        if (isAvailable(startTime, endTime) && haveEnoughFunds()) {
-            // TODO: Transfer from renter to owner 
+        if (isAvailable(startTime, endTime) && haveEnoughFunds(price)) {
             tokenContract.TransferTokens(msg.sender, owner_wallet, price);
             clients.push(Client(msg.sender, startTime, endTime));
             return true;
@@ -76,15 +73,15 @@ contract Rent {
         return false;
     }
 
-    function computeNumDays(uint256 startTime, uint256 endTime) internal pure returns (uint) {
+    function computeNumDays(uint256 startTime, uint256 endTime) public pure returns (uint) {
         return (endTime - startTime) / 86400; // 60*60*24
     }
     
-    function computePrice(uint256 nDays) internal view returns (uint) {
+    function computePrice(uint256 nDays) public view returns (uint) {
         return nDays * pricePerNight;
     }
     
-    function isAvailable(uint256 startTime, uint256 endTime) internal view returns (bool) {
+    function isAvailable(uint256 startTime, uint256 endTime) public view returns (bool) {
         for (uint i = 0; i < clients.length; i++) {
             bool isFree = endTime+cleanTime < clients[i].startTime || clients[i].endTime+cleanTime < startTime;
             if(!isFree) {
@@ -94,10 +91,8 @@ contract Rent {
         return true;
     }
     
-    function haveEnoughFunds() internal returns (bool) {
-        // msg.sender
-        // TODO: Check balance in token wallets given msg.address
-        
+    function haveEnoughFunds(uint256 _price) internal view  returns (bool) {
+        return tokenContract.getBalance() > _price;
     }
     
     function Evaluate() public {
@@ -111,4 +106,3 @@ contract Rent {
         _;
     }
 }
-
