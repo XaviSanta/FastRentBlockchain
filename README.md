@@ -14,7 +14,7 @@
 	- Creates **Rent** Contract 
 		- _pricePerNight: `20`
 		- _cleanTime: `20`
-		- _token: `0xD66bA2586845B4c297a3CB34ec5d566321780513`
+		- _contractAddress: `0xD66bA2586845B4c297a3CB34ec5d566321780513`
 
 5. RENTER:
 	- f.computePrice, f.computeNumDays, f.isAvailable -> Correct
