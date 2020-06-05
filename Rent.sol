@@ -1,72 +1,6 @@
 pragma solidity 0.6.8;
-/*
-    Fast Rent Blockchain Utility Token
-    This token is used to pay rents and be able the evaluate stays
-*/
-contract FRBToken {
-    string public name;
-    string public symbol;
-    address payable FRBTeam;
-    mapping(address => uint) balances;
-    
-    constructor(string memory _name, string memory _symbol) public {
-        name = _name;
-        symbol = _symbol;
-        FRBTeam = msg.sender;
-    }
-
-    function buyTokens() public payable {
-        uint nWeis = msg.value;
-        FRBTeam.transfer(nWeis);
-        balances[msg.sender] += nWeis / 1000;
-    }
-
-    function TransferTokens(address _source, address _target, uint _numTokens) public {
-        require(_source == tx.origin);
-        require(balances[_source] > _numTokens);
-        balances[_source] -= _numTokens;
-        balances[_target] += _numTokens;
-    }
-
-    function getBalance(address _wallet) public view returns (uint) {
-        return balances[_wallet];
-    }
-}
-
-contract UserReputations {
-    FRBToken tokenContract; // Save instance of the FRB token contract
-    
-    mapping(address => Reputation) reputations;
-    struct Reputation {
-        uint averageScore;  // Score from 1 to 5
-        uint numVotes;      // Number of people who rated the user
-    }
-    
-    constructor(address _tokenContract) public {
-        tokenContract = FRBToken(_tokenContract); // Contract Address of the FRB Tokne contract, not the wallet
-    }
-    
-    function getReputation(address _user) public view returns(uint) {
-        return reputations[_user].averageScore;
-    }
-    
-    // from 1 to 5
-    function evaluateUser(address _user, uint _valoration) public returns (bool) {
-        if (1 <= _valoration && _valoration >= 5) {
-            // Checks if the addres is from a Rent Contract and renter have rented the house
-            // msg.sender is the address of the rent contract and tx origin is the renter who called 
-            // the evaluate function in Rent Contract
-            if(Rent(msg.sender).canThisUserValorateOwner(tx.origin)) {
-                uint numVotes = reputations[_user].numVotes;
-                uint averageScore = reputations[_user].averageScore;
-                uint newScore = averageScore * (numVotes/(numVotes+1)) + (_valoration/(numVotes+1));
-                reputations[_user] = Reputation(newScore, numVotes+1); // Update reputation of user
-                return true;
-            }
-        }
-        return false;
-    }
-}
+import './FRBToken.sol';
+import './UserReputations.sol';
 /* 
     This contract is created whenever an owner of property wants to
     put the house available to rent. 
@@ -103,9 +37,9 @@ contract Rent {
 
     function RentHouse(uint256 _startTime, uint256 _endTime) public payable returns (bool) {
         uint nDays = computeNumDays(_startTime, _endTime);
-        uint price = computePrice(nDays); // price in FRB Tokens
-        if (isAvailable(_startTime, _endTime) && haveEnoughFunds(price)) {
-            tokenContract.TransferTokens(msg.sender, owner_wallet, price);
+        uint nTokens = computePrice(nDays); // price in FRB Tokens
+        if (isAvailable(_startTime, _endTime) && haveEnoughFunds(nTokens)) {
+            tokenContract.transferTokens(msg.sender, owner_wallet, nTokens);
             clients.push(Client(msg.sender, _startTime, _endTime));
             return true;
         }
