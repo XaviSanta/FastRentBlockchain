@@ -13,7 +13,7 @@
 	- Creates **Rent** Contract 
   		- _pricePerNight: `20`
     	- _minimumDaysStay: `4`
-  		- _cleanTime: `20`
+  		- _hoursBetweenStays: `20`
   		- _contractAddress: <`FRBToken contract address`>
   		- _reputationsContract: <`UserReputations contract address`>
 
