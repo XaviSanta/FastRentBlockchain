@@ -16,16 +16,16 @@ contract FRBToken {
     }
 
     function buyTokens() public payable {
-        uint256 nWeis = msg.value;
+        uint nWeis = msg.value;
         FRBTeam.transfer(nWeis);
         balances[tx.origin] += nWeis / 1000; // TODO: Price per token to be decided
     }
 
-    function TransferTokens(address source, address target, uint num_tokens) public {
-        require(source == tx.origin);
-        require(balances[source] - num_tokens > 0);
-        balances[source] -= num_tokens;
-        balances[target] += num_tokens;
+    function TransferTokens(address _source, address _target, uint _numTokens) public {
+        require(_source == tx.origin);
+        require(balances[_source] > _numTokens);
+        balances[_source] -= _numTokens;
+        balances[_target] += _numTokens;
     }
 
     function getMyBalance() public view returns (uint) {
@@ -74,22 +74,22 @@ contract UserReputations {
 contract Rent {
     FRBToken tokenContract;             // Save instance of the FRB token contract_address
     UserReputations reputationsContract;// Save instance of the FRB token contract_address
-    uint256 public pricePerNight;       // in FRB Tokens
+    uint public pricePerNight;          // in FRB Tokens
     address payable owner_wallet;       // Owner Wallet
-    uint256 public hoursBetweenStays;   // Time between clients to clean the property
+    uint public hoursBetweenStays;      // Time between clients to clean the property
     uint public minimumDaysStay;        // Minimum Days to rent the property chosen by the owner
 
     Client[] clients;
     struct Client {
         address _address;
-        uint256 startTime;
-        uint256 endTime;
+        uint startTime;
+        uint endTime;
     }
 
     constructor(
-        uint256 _pricePerNight,
+        uint _pricePerNight,
         uint _minimumDaysStay,
-        uint256 _hoursBetweenStays,
+        uint _hoursBetweenStays,
         address _tokenContract,
         address _reputationsContract
         ) public {
@@ -101,40 +101,41 @@ contract Rent {
         reputationsContract = UserReputations(_reputationsContract); // Contract Address of the FRB Tokne contract, not the wallet
     }
 
-    function RentHouse(uint256 startTime, uint256 endTime) public payable returns (bool) {
-        uint256 nDays = computeNumDays(startTime, endTime);
-        uint256 price = computePrice(nDays); // price in FRB Tokens
-        if (isAvailable(startTime, endTime) && haveEnoughFunds(price)) {
+    function RentHouse(uint256 _startTime, uint256 _endTime) public payable returns (bool) {
+        uint nDays = computeNumDays(_startTime, _endTime);
+        uint price = computePrice(nDays); // price in FRB Tokens
+        if (isAvailable(_startTime, _endTime) && haveEnoughFunds(price)) {
             tokenContract.TransferTokens(msg.sender, owner_wallet, price);
-            clients.push(Client(msg.sender, startTime, endTime));
+            clients.push(Client(msg.sender, _startTime, _endTime));
             return true;
         }
         return false;
     }
 
-    function computeNumDays(uint256 startTime, uint256 endTime) public pure returns (uint) {
-        return (endTime - startTime) / 1 days;
+    function computeNumDays(uint _startTime, uint _endTime) public pure returns (uint) {
+        return (_endTime - _startTime) / 1 days;
     }
 
-    function computePrice(uint256 nDays) public view returns (uint) {
-        return nDays * pricePerNight;
+    function computePrice(uint _nDays) public view returns (uint) {
+        return _nDays * pricePerNight;
     }
 
-    function isAvailable(uint256 startTime, uint256 endTime) public view returns (bool) {
+    function isAvailable(uint _startTime, uint _endTime) public view returns (bool) {
         // check if given times overlap with other renters
         for (uint i = 0; i < clients.length; i++) {
-            uint256 secondsBetweenStays = hoursBetweenStays * 1 hours;
-            bool isFree = endTime+secondsBetweenStays < clients[i].startTime || clients[i].endTime+secondsBetweenStays < startTime;
+            uint secondsBetweenStays = hoursBetweenStays * 1 hours;
+            bool isFree = _endTime+secondsBetweenStays < clients[i].startTime
+                || clients[i].endTime+secondsBetweenStays < _startTime;
             if(!isFree) {
                 return false;
             }
         }
 
         // check if dates are future times and it has at least a minimum stay 
-        return (startTime > now) && (startTime+(minimumDaysStay*1 days) < endTime);
+        return (_startTime > now) && (_startTime+(minimumDaysStay*1 days) < _endTime);
     }
 
-    function haveEnoughFunds(uint256 _price) internal view  returns (bool) {
+    function haveEnoughFunds(uint _price) internal view  returns (bool) {
         return tokenContract.getMyBalance() > _price;
     }
 
