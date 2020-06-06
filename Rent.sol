@@ -18,6 +18,7 @@ contract Rent {
         address _address;
         uint startTime;
         uint endTime;
+        bool hasRated;
     }
 
     constructor(
@@ -34,13 +35,13 @@ contract Rent {
         tokenContract = FRBToken(_tokenContract); // Contract Address of the FRB Tokne contract, not the wallet
         reputationsContract = UserReputations(_reputationsContract); // Contract Address of the FRB Tokne contract, not the wallet
     }
-
+    
     function RentHouse(uint256 _startTime, uint256 _endTime) public payable returns (bool) {
         uint nDays = computeNumDays(_startTime, _endTime);
         uint nTokens = computePrice(nDays); // price in FRB Tokens
         if (isAvailable(_startTime, _endTime) && haveEnoughFunds(nTokens)) {
             tokenContract.transferTokens(msg.sender, owner_wallet, nTokens);
-            clients.push(Client(msg.sender, _startTime, _endTime));
+            clients.push(Client(msg.sender, _startTime, _endTime, false));
             return true;
         }
         return false;
@@ -75,13 +76,27 @@ contract Rent {
         return true;
     }
 
+    /**
+     * 
+     * 
+     */
     function evaluateOwner(uint _valoration) public returns (bool) {
-        return reputationsContract.evaluateUser(owner_wallet, _valoration);
+        if(reputationsContract.evaluateUser(owner_wallet, _valoration)) {
+            for (uint i = 0; i < clients.length; i++) {
+                if (clients[i]._address == tx.origin && !clients[i].hasRated) {
+                    clients[i].hasRated = true;
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     function canThisUserValorateOwner(address _user) public view returns (bool) {
         for (uint i = 0; i < clients.length; i++) {
-            if (clients[i]._address == _user && clients[i].endTime < now) {
+            if (clients[i]._address == _user 
+                // && clients[i].endTime < now
+                && !clients[i].hasRated) {
                 return true;
             }
         }
