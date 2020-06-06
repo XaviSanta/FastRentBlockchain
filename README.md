@@ -1,5 +1,12 @@
 # FastRentBlock
 
+##Created by:
+	Xavier Santamaria
+	Amparo Alías
+	Raúl Rivas
+	Judit Boronat
+	Arnau Oller
+	
 ## Example to test it: 
 1. Create contract **FRBToken**
 
@@ -24,6 +31,6 @@
 		- endTime:		`1593094031`
 6. Check OWNER balance `+100 FRB` -> Correct
 7. Check RENTER balance `-100 FRB` ->  Correct
-8. User can now valorate the stay calling f.**evaluateOwner**
+8. User can now rate the stay calling f.**evaluateOwner**
 	- Parameter is a number from 1 to 5
 9. In UserReputation call `getReputation(owner addr)` and it should have changed
