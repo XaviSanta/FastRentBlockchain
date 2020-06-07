@@ -1,6 +1,6 @@
 # FastRentBlock
 
-##Created by:
+## Created by:
 	Xavier Santamaria
 	Amparo Alías
 	Raúl Rivas
@@ -11,7 +11,6 @@
 1. Create contract **FRBToken**
 
 2. Create contract **UserReputations**
-   - Constructor(<`FRBToken contract address`>) from last step
 
 3. RENTER: `0xdD870fA1b7C4700F2BD7f44238821C26f7392148`
 	- **Buys** `200 FRB` tokens with `2.000.000 weis`
@@ -31,6 +30,6 @@
 		- endTime:		`1593094031`
 6. Check OWNER balance `+100 FRB` -> Correct
 7. Check RENTER balance `-100 FRB` ->  Correct
-8. User can now rate the stay calling f.**evaluateOwner**
+8. Wait end time finishes then User can now rate the stay calling f.**evaluateOwner** from Rent contract
 	- Parameter is a number from 1 to 5
-9. In UserReputation call `getReputation(owner addr)` and it should have changed
+9. In UserReputations call `getReputation(owner addr)` and it should have changed

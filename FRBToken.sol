@@ -32,7 +32,8 @@ contract FRBToken {
         Used to to transactions between users. For example from a renter to an owner
     */
     function transferTokens(address _source, address _target, uint _numTokens) public {
-        require(_source == tx.origin);
+        // this require only allows transfers if you are the owner of the wallet from which the tokens come from
+        require(_source == tx.origin);  
         require(balances[_source] > _numTokens);
         balances[_source] -= _numTokens;
         balances[_target] += _numTokens;

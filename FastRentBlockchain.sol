@@ -1,6 +1,119 @@
+/** FAST RENT BLOCKCHAIN
+ * Group Member Names:
+ *      Xavier Santamaria
+ *	    Amparo Alías
+ *	    Raúl Rivas
+ * 	    Judit Boronat
+ *	    Arnau Oller
+ * 
+ * Project Summary:
+ *  It contains 3 Contracts: FRBToken, UserReputations and Rent
+ *  Rent is created by owners of property, for each property they want to put it to rent.
+ *  Renters use FRBToken to pay the rent. And UserReputations contract saves all the 
+ *  rates the clients give to the owners in a way that it is inmutable and so users can see
+ *  the reputation of others before renting a place.
+ *  
+ *  Deploy instructions in README. 
+ *      Deploy FRBToken Contract,
+ *      Deploy ReputationsContract
+ *      Deploy Rent Contract from Owner address
+ *  Renter: 
+ *      Buy tokens, then rent property specifiyng first and last day in epoch time
+ *      After the stay call evaluateOwner from Rent contract with a value from 1 to 5
+ *  
+ *  See README for a better understanding
+ *      https://github.com/XaviSanta/FastRentBlockchain
+ * 
+ */
+
 pragma solidity 0.6.8;
-import './FRBToken.sol';
-import './UserReputations.sol';
+pragma experimental ABIEncoderV2;
+/*
+    Fast Rent Blockchain Utility Token
+    This token is used to pay for rent
+    Exchange rate is 1 FRB token  === 0.000000000000001 Ether
+*/
+contract FRBToken {
+    string public name;
+    string public symbol;
+    address payable FRBTeam;
+    mapping(address => uint) balances;
+    
+    constructor() public {
+        name = 'Fast Rent Blockchain';
+        symbol = 'FRB';
+        FRBTeam = msg.sender;
+    }
+
+    /* 
+        Our exchange rate is the following:
+        1 FRB token === 1000 Weis
+        which is equivalent to:
+        1 FRB token  === 0.000000000000001 Ether
+    */
+    function buyTokens() public payable {
+        uint nWeis = msg.value;
+        FRBTeam.transfer(nWeis);
+        balances[msg.sender] += nWeis / 1000; //1000 Weis === 1 FRB token
+    }
+
+    /* 
+        Used to to transactions between users. For example from a renter to an owner
+    */
+    function transferTokens(address _source, address _target, uint _numTokens) public {
+        // this require only allows transfers if you are the owner of the wallet from which the tokens come from
+        require(_source == tx.origin);  
+        require(balances[_source] > _numTokens);
+        balances[_source] -= _numTokens;
+        balances[_target] += _numTokens;
+    }
+
+    function getBalance(address _wallet) public view returns (uint) {
+        return balances[_wallet];
+    }
+}
+
+/*
+    This contract manages the reputation of the users
+*/
+contract UserReputations {
+    mapping(address => Reputation) reputations;
+    struct Reputation {
+        uint totalScore;    // The addition of all the ratings
+        uint numVotes;      // Number of people who rated the user
+    }
+
+    constructor() public {}
+    
+    /* 
+        The front end should show the return of the function in the most aproppitate way, a reasonable way would be to
+        divide the two given values to have the average score of the place
+     */
+    function getReputation(address _user) public view returns(Reputation memory) {
+        return reputations[_user];
+    }
+    
+    /* 
+        The ratings can be 1,2,3,4,5, being 1 the worst grade and 5 the best one
+        It's similar to how the Play Store rating works
+
+        If the user can vote is checked and then the vote is recorded
+        
+        As this function is called from a contrat Rent, the msg.sender will be the contract address
+        So that is why we use tx.origin to refer to the user and msg.sender to get the instance
+        of the Rent contract.
+    */
+    function evaluateUser(address _user, uint _valoration) public returns (bool) {
+        require(1 <= _valoration && _valoration <= 5, 'Value should be between 1 and 5');
+        if(Rent(msg.sender).canThisUserValorateOwner(tx.origin)) { 
+            reputations[_user].totalScore += _valoration;
+            reputations[_user].numVotes++;
+            return true;
+        }
+        return false;
+    }
+}
+
 /*
     This contract is created when an owner wants to
     put a house available for rent.
@@ -146,6 +259,7 @@ contract Rent {
             The user should actually be a renter, so he should be in the clients list
             Renter should have completed the stay before voting
             Renter can only vote once for each stay
+        
     */
     function canThisUserValorateOwner(address _user) public view returns (bool) {
         for (uint i = 0; i < clients.length; i++) {
@@ -180,7 +294,7 @@ contract Rent {
     function setHoursBetweenStays(uint _newHoursBetweenStays) public onlyOwner {
         hoursBetweenStays = _newHoursBetweenStays;
     }
-
+    
     function setMinimumDaysStay(uint _newMinimumDaysStay) public onlyOwner {
         minimumDaysStay = _newMinimumDaysStay;
     }
